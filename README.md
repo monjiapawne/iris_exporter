@@ -8,7 +8,7 @@
 
 ## About
 
-[DFIR-IRIS](https://www.dfir-iris.org/)
+[DFIR-IRIS](https://www.dfir-iris.org/) - Collaborative Incident Response Platform
 
 ## Configuration
 

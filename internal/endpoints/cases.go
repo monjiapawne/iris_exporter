@@ -20,19 +20,13 @@ func NewCasesMetric(c *client.Client, caseOpts CasesOptions) *collector.Collecto
 		collector.Gauge("cases_current", "Current number of cases", func(r casesResponse) float64 { return float64(len(r.Data)) }),
 		collector.GaugeMulti("cases_state", "Cases per state.", []string{"state"},
 			func(r casesResponse) []collector.LabeledValue {
-				counts := map[string]float64{}
-				for _, c := range r.Data {
-					if c.State == "" {
-						counts["none"]++
-					} else {
-						counts[normalizeLabel(c.State)]++
-					}
-				}
-				out := make([]collector.LabeledValue, 0, len(counts))
-				for state, n := range counts {
-					out = append(out, collector.LabeledValue{Labels: []string{state}, Value: n})
-				}
-				return out
+				return countBy(r.Data,
+					func(c caseItem) string {
+						if c.State == "" {
+							return "none"
+						}
+						return c.State
+					})
 			}),
 		collector.GaugeMulti("cases_classification", "Cases by classification", []string{"classification"},
 			func(r casesResponse) []collector.LabeledValue {

@@ -86,8 +86,6 @@ From there you can add any type of metric to the slice, in this case `alertsMetr
 go build ./cmd/iris_exporter
 ```
 
-
-
 ## Resources
 
 - [docs](https://docs.dfir-iris.org/latest/operations/api/)

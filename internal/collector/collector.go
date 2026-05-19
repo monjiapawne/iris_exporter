@@ -28,10 +28,6 @@ func Gauge[R any](name, help string, fn func(R) float64) MetricDef[R] {
 	return MetricDef[R]{desc: prometheus.NewDesc(namespace+name, help, nil, nil), valueType: prometheus.GaugeValue, value: fn}
 }
 
-func GaugeLabeled[R any](name, help string, labelNames []string, fn func(R) float64, labels func(R) []string) MetricDef[R] {
-	return MetricDef[R]{desc: prometheus.NewDesc(namespace+name, help, labelNames, nil), valueType: prometheus.GaugeValue, value: fn, labels: labels}
-}
-
 // Used for multiple value gauges
 // The function must return a slice of LabeledValues which are basically Key/Values for the metric
 func GaugeMulti[R any](name, help string, labelNames []string, fn func(R) []LabeledValue) MetricDef[R] {
