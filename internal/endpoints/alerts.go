@@ -3,6 +3,7 @@ package endpoints
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/monjiapawne/iris_exporter/internal/client"
 	"github.com/monjiapawne/iris_exporter/internal/collector"
@@ -51,6 +52,30 @@ func NewAlertsMetric(c *client.Client, alertOps AlertOptions) *collector.Collect
 						return []string{a.Classification.Name}
 					})
 			}),
+		collector.Gauge("alerts_average_age_hours", "Age of open alerts",
+			func(r alertsReponse) float64 {
+				var count float64
+				var total float64
+				for _, a := range r.Data.Alerts {
+					if a.Status.Name == "Closed" {
+						continue
+					}
+					count++
+					total += time.Since(a.AlertCreationTime.Time()).Hours()
+				}
+				return total / count
+			}),
+		collector.Gauge("alerts_open_escalated_total", "Total open alerts that have been escalated into a case",
+			func(r alertsReponse) float64 {
+				var count float64
+				for _, a := range r.Data.Alerts {
+					// Alert has an open case and not closed
+					if len(a.Cases) > 0 && a.Status.Name != "Closed" {
+						count++
+					}
+				}
+				return count
+			}),
 	}
 
 	return collector.NewCollector(casesMetrics, func() (alertsReponse, error) {
@@ -75,19 +100,21 @@ func NewAlertsMetric(c *client.Client, alertOps AlertOptions) *collector.Collect
 }
 
 type alertItem struct {
+	AlertSource       string      `json:"alert_source"`
+	AlertCreationTime ISODateTime `json:"alert_creation_time"`
+	Cases             []int64     `json:"cases"`
+	Classification    struct {
+		Name string `json:"name"`
+	} `json:"classification"`
+	ResolutionStatus struct {
+		Name string `json:"resolution_status_name"`
+	} `json:"resolution_status"`
 	Severity struct {
 		Name string `json:"severity_name"`
 	} `json:"severity"`
 	Status struct {
 		Name string `json:"status_name"`
 	} `json:"status"`
-	AlertSource    string `json:"alert_source"`
-	Classification struct {
-		Name string `json:"name"`
-	} `json:"classification"`
-	ResolutionStatus struct {
-		Name string `json:"resolution_status_name"`
-	} `json:"resolution_status"`
 }
 
 type alertsReponse struct {

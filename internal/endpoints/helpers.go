@@ -43,7 +43,8 @@ func countByEach[T any](items []T, keys func(T) []string) []collector.LabeledVal
 	return out
 }
 
-// Custom data format to unmarshal
+// Custom fields for unmarshing
+
 // ex: "case_open_date": "05/10/2026"
 type MMDDYYYYDate time.Time
 
@@ -63,5 +64,26 @@ func (d *MMDDYYYYDate) UnmarshalJSON(data []byte) error {
 }
 
 func (d MMDDYYYYDate) Time() time.Time {
+	return time.Time(d)
+}
+
+// ISODateTime unmarshals timestamps like "2026-05-14T22:06:12.224370" (no timezone)
+type ISODateTime time.Time
+
+func (d *ISODateTime) UnmarshalJSON(data []byte) error {
+	s := strings.Trim(string(data), `"`)
+	if s == "" || s == "null" {
+		*d = ISODateTime(time.Time{})
+		return nil
+	}
+	t, err := time.Parse("2006-01-02T15:04:05.999999", s)
+	if err != nil {
+		return err
+	}
+	*d = ISODateTime(t)
+	return nil
+}
+
+func (d ISODateTime) Time() time.Time {
 	return time.Time(d)
 }

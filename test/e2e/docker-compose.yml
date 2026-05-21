@@ -1,0 +1,64 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-alpine
+    networks:
+      - iris_net
+
+  db:
+    image: ${DB_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_db}:${DB_IMAGE_TAG:-v2.4.20}
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_ADMIN_USER=raptor
+      - POSTGRES_ADMIN_PASSWORD=postgres
+      - POSTGRES_DB=iris_db
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - iris_net
+
+  app:
+    image: ${APP_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_app}:${APP_IMAGE_TAG:-v2.4.20}
+    command: ["nohup", "./iris-entrypoint.sh", "iriswebapp"]
+    depends_on:
+      - rabbitmq
+      - db
+    env_file:
+      - iris.env
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_ADMIN_USER=raptor
+      - POSTGRES_ADMIN_PASSWORD=postgres
+      - POSTGRES_SERVER=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=iris_db
+      - IRIS_SECRET_KEY=e2e-secret-key-not-for-production
+      - CELERY_BROKER=amqp://rabbitmq
+      - DOCKERIZED=1
+    tmpfs:
+      - /home/iris/downloads
+      - /home/iris/user_templates
+      - /home/iris/server_data
+    networks:
+      - iris_net
+
+  exporter:
+    build:
+      context: ../..
+      dockerfile: build/Dockerfile
+    depends_on:
+      - app
+    env_file:
+      - exporter.env
+    ports:
+      - "10043:10043"
+    networks:
+      - iris_net
+
+volumes:
+  db_data:
+
+networks:
+  iris_net:
+
