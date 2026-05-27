@@ -1,3 +1,5 @@
+# This is a stripped down compose from the upstream IRIS compose,
+# It includes just enough to get up and do full end to end tests.
 services:
   rabbitmq:
     image: rabbitmq:3-alpine

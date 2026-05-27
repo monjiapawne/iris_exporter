@@ -86,6 +86,10 @@ From there you can add any type of metric to the slice, in this case `alertsMetr
 go build ./cmd/iris_exporter
 ```
 
+## Grafana Examples
+
+Grafana example dashboards are welcome as well. Please include screenshots following the current pattern.
+
 ## Resources
 
 - [docs](https://docs.dfir-iris.org/latest/operations/api/)
